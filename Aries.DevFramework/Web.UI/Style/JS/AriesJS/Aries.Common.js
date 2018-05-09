@@ -574,8 +574,8 @@
                 return function configFormatter(value, row, index) {
                     var result = value;
                     if (value != undefined && value.toString() != "") {
-                        if (configKey && $Core.Global.Config[configKey]) {
-                            result = getConfigName(configKey, value);
+                        if (configKey && $Core.Config.data[configKey]) {
+                            result = $Core.Config.getText(configKey, value);
                         }
                     }
                     result = $Core.Common.Formatter.onAfterExecute(configKey, result, row, index);
@@ -594,9 +594,8 @@
                 return function objFormatter(value, row, index) {
                     var result = value;
                     if (value != undefined && value.toString() != "") {
-                        var _obj = getObj(objName);
-                        if ($Core.Global.comboxData && _obj) {
-                            result = getNameByValue(_obj, value);
+                        if ($Core.Combobox.data) {
+                            result = $Core.Combobox.getText(objName, value);
                         }
                     }
                     result = $Core.Common.Formatter.onAfterExecute(objName, result, row, index);
@@ -625,42 +624,50 @@
                             if (dg.PKColumn.Editor.BtnEdit.hidden != true && actionKeys.indexOf(",edit,") > -1) {
                                 len++;
                                 var $btn = $($Core.Utility.stringFormat(strTemplate, "bj", $Core.Lang.edit, "onEdit", value, index));
+                                obj.set("edit", { "isCustom": false, $target: $btn });
                                 $div.append($btn);
 
                             }
                             if (dg.PKColumn.Editor.BtnDel.hidden != true && actionKeys.indexOf(",del,") > -1) {
                                 len++;
                                 var $btn = $($Core.Utility.stringFormat(strTemplate, "sc", $Core.Lang.del, "onDel", value, index));
-                                obj.set("del", $btn);
+                                obj.set("del",{ "isCustom": false, $target: $btn });
                                 $div.append($btn);
                             }
                         }
                         else {
+                            //有编辑权限才能进来
                             if (dg.PKColumn.Editor.BtnCancel.hidden != true && actionKeys.indexOf(",edit,") > -1) {
                                 len++;
                                 var $btn = $($Core.Utility.stringFormat(strTemplate, "cx", $Core.Lang.cancel, "onCancel", value, index));
-                                obj.set("edit", $btn);
+                                obj.set("cancel", { "isCustom": false, $target: $btn });
                                 $div.append($btn);
                             }
                             if (dg.PKColumn.Editor.BtnSave.hidden != true && actionKeys.indexOf(",edit,") > -1) {
                                 len++;
                                 var $btn = $($Core.Utility.stringFormat(strTemplate, "bc", $Core.Lang.save, "onSave", value, index));
-                                obj.set("edit", $btn);
+                                obj.set("save", { "isCustom": false, $target: $btn });
                                 $div.append($btn);
                             }
                         }
                     }
-                    for (var i = 0; i < btnArray.length; i++) {
+                    //自定义按钮
+                    for (var i = 0; i < btnArray.length; i++)
+                    {
                         var btn = btnArray[i];
-                        if (!btn.isHidden && actionKeys.indexOf("," + btn.lv2action + ",") > -1) {
-                            if (btn.className != 'sc') {
-                                btn.setAttribute("onClick", "AR.Common.onOpen(this,'" + value + "','" + dg.id + "'," + index + ")");
-                            } else {
-                                btn.setAttribute("onClick", "AR.Common.onDel(this,'" + value + "','" + dg.id + "'," + index + ")");
+                        if (!btn.isHidden && actionKeys.indexOf("," + btn.lv2action + ",") > -1)
+                        {
+                            if (!btn.hasAttribute("onclick")) {
+                                if (btn.className == 'sc') {
+                                    btn.setAttribute("onclick", "AR.Common.onDel(this,'" + value + "','" + dg.id + "'," + index + ")");
+                                }
+                                else {
+                                    btn.setAttribute("onclick", "AR.Common.onOpen(this,'" + value + "','" + dg.id + "'," + index + ")");
+                                }
                             }
                             len++;
                             var $btn = $(btn.outerHTML);
-                            obj.set(btn.key, $btn);
+                            obj.set(btn.key, { "isCustom": true, $target: $btn });
                             $div.append($btn);
                         }
                     }
@@ -713,11 +720,11 @@
                             }
                         }
                         if (configKey) {
-                            data = $Core.Global.Config[configKey] || [];
+                            data = $Core.Config.data[configKey] || [];
                         }
                         if (objName) {
-                            if ($Core.Global.comboxData[objName]) {
-                                data = $Core.Global.comboxData[objName];
+                            if ($Core.Combobox.data[objName]) {
+                                data = $Core.Combobox.data[objName];
 
                             }
                         }
@@ -749,8 +756,8 @@
                                             var subArray = new Array();
                                             (function (key, parent_id) {
                                                 var all_array_children;
-                                                if ($Core.Global.comboxData[key]) {
-                                                    all_array_children = $Core.Global.comboxData[key];
+                                                if ($Core.Combobox.data[key]) {
+                                                    all_array_children = $Core.Combobox.data[key];
                                                 }
                                                 for (var k = 0; k < all_array_children.length; k++) {
                                                     if (all_array_children[k].parent == parent_id) {
@@ -851,7 +858,7 @@
                                 pkColumn.rowspan = 1;
                                 pkColumn.width = len * 32;
                                 pkColumn.hidden = false;
-                                var title = getConfigValue("SysConfig", "OperatorTitle");
+                                var title = $Core.Config.getValue("SysConfig", "OperatorTitle");
                                 if (!title) {
                                     title = $Core.Lang.opration;
                                 }
@@ -1115,7 +1122,9 @@
                     var btnClass = btn.css || "btn-sm";
                     var btnClick = btn.click;
                     var title = btn.title;
-                    item = $Core.Utility.stringFormat('<a><input class=\"{0}\" type=\"button\" onClick=\"{1}(event)\"  value=\"{2}\"/></a>', btnClass, btnClick, title);
+                    var classText = btnClass ? "class=\""+btnClass+"\"" : "";
+                    var clickText = btnClick && btnClass!="null" ? "onclick=\"" + btnClick + "(event)\"" : "";
+                    item = $Core.Utility.stringFormat('<a><input type=\"button\" {0} {1}  value=\"{2}\"/></a>', classText, clickText, title);
                 }
                 item = $(item);
                 var toolbarContainer = dg.ToolBar.$target;//  $("#" + dg.ToolArea.id).find(".function-box"),
@@ -1137,78 +1146,8 @@
             }
         }
     }
-    function getObj(objName) {
-        return $Core.Global.comboxData[objName];
-    }
-    function getNameByValue(obj, v) {
-        var value = v;
-        if ($.type(obj) == "object") {
-            obj = [obj];
-        }
-        if (v.toString().indexOf(',') != -1) {
-            var array = v.split(','), result = [];
-            for (var i = 0; i < obj.length; i++) {
-                if (array.contains(obj[i]['value'])) {
-                    result.push(obj[i]['text']);
-                }
-            }
-            if (result.length > 0) {
-                value = result.join(',');
-            }
-        } else {
-            for (var i = 0; i < obj.length; i++) {
-                if (obj[i]['value'] == v) {
-                    value = obj[i]['text'];
-                    break;
-                }
-            }
-        }
-        return value;
-    }
-    function getConfigName(configKey, value) {
-        var items = $Core.Global.Config[configKey];
-        var itemValue = [];
-        if (items != undefined && value != undefined && value != null && value.toString() != '') {
-            var valueArray = value.toString().split(',');
-            var isIn = false;
-            for (var i = 0; i < items.length; i++) {
-                isIn = valueArray.contains(items[i].value);
-                if (!isIn) {
-                    var iValue = items[i].value.toString();
-                    if (iValue == "1" || iValue == "0") {
-                        isIn = valueArray.contains(iValue == "1" ? true : false);
-                    }
-                    else if (iValue == "true" || iValue == "false") {
-                        isIn = valueArray.contains(iValue == "true" ? 1 : 0);
-                    }
-                }
-                if (isIn) {
-                    itemValue.push(items[i].text);
-                }
-
-            }
-            return itemValue.length == 0 ? value : itemValue.join(',');
-        } else {
-            return '';
-        }
-    }
-
-    function getConfigValue(configKey, text) {
-        var items = $Core.Global.Config[configKey];
-        var itemValue = [];
-        if (items != undefined && text != undefined && text != null && text.toString() != '') {
-            var valueArray = text.toString().split(',');
-            for (var i = 0; i < items.length; i++) {
-                if (valueArray.contains(items[i].text)) {
-                    itemValue.push(items[i].value);
-                }
-            }
-            return itemValue.length == 0 ? text : itemValue.join(',');
-        }
-        else {
-            return '';
-        }
-    }
+   
+   
     function getDgByKey(key) {
         return $Core.Global.DG.Items[key];
     }

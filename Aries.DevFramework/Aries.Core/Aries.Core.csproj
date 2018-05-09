@@ -34,7 +34,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CYQ.Data">
+    <Reference Include="CYQ.Data, Version=5.7.8.4, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\CYQ.Data.dll</HintPath>
     </Reference>
     <Reference Include="NPOI, Version=2.1.1.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
@@ -67,6 +68,7 @@
     <Compile Include="Base\RouteConfig.cs" />
     <Compile Include="Config\LangConst.cs" />
     <Compile Include="InvokeLogic.cs" />
+    <Compile Include="SessionHandler.cs" />
     <Compile Include="UrlRewrite.cs" />
     <Compile Include="Base\LogicBase.cs" />
     <Compile Include="Config\ExcelConfig.cs" />
