@@ -20,7 +20,7 @@ namespace Aries.Core.Sql
         /// <summary>
         /// SQL文件存档路径
         /// </summary>
-        public static string path = AppDomain.CurrentDomain.BaseDirectory + "\\App_Data\\SQLCode\\";
+        public static string path = AppConfig.WebRootPath + "\\App_Data\\SQLCode\\";
         private static Dictionary<string, string> _FileList = null;
         /// <summary>
         /// 获取所有的SQL文件字典
