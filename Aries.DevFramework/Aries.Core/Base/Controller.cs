@@ -41,6 +41,12 @@ namespace Aries.Core
             this.context = context;
             try
             {
+                if (string.IsNullOrEmpty(context.Response.Charset))
+                {
+                    context.Response.Charset = "utf-8";
+                }
+                context.Response.ContentType = "application/json";
+
                 functionName = Query<string>("sys_method", "").Trim(' ', ',');
                 string[] items = functionName.Split(',');
                 JsonHelper js = null;
@@ -71,6 +77,7 @@ namespace Aries.Core
                     else
                     {
                         WriteError(AppConfig.GetApp("UI") + "/login.html");
+                        return;
                     }
                 }
                 if (items.Length > 1)
@@ -133,6 +140,7 @@ namespace Aries.Core
                 else
                 {
                     SetError("Permission denied！");
+                    return;
                 }
             }
             if (excelStream != null)
@@ -234,7 +242,7 @@ namespace Aries.Core
             {
                 result = result.Replace("\t", " ").Replace("\r", " ").Replace("\n", "<br/>");//Replace("\n", HttpUtility.HtmlEncode("<br/>"))
             }
-            HttpContext.Current.Response.Write(result);
+            context.Response.Write(result);
         }
         public string GetWhereIn(string primaryKey, string requestKey = null)
         {
@@ -380,10 +388,10 @@ namespace Aries.Core
                 if (string.IsNullOrEmpty(_ObjName))
                 {
                     _ObjName = Query<string>("sys_objName");
-                    if (string.IsNullOrEmpty(_ObjName) || _ObjName.Contains(" "))
-                    {
-                        WriteError("ObjName can't be empty or contain blank!");
-                    }
+                    //if (string.IsNullOrEmpty(_ObjName))// || _ObjName.Contains(" ")
+                    //{
+                    //    WriteError("ObjName can't be empty or contain blank!");
+                    //}
                     return _ObjName;
                 }
                 return _ObjName;
@@ -845,11 +853,13 @@ namespace Aries.Core
                     KeyValueConfig.SetTableDescription(ObjName, p.MenuName);
                 }
             }
-            else
+            if (Query<string>("reflesh") == "1")//刷新表结构
             {
-                //dt = GridConfig.Check(ObjName,ObjCode, dt);
+                string msg;
+                bool result = GridConfig.Flesh(ObjName, ObjCode, dt, out msg);
+                jsonResult = JsonHelper.OutResult(result, msg);
             }
-            if (dt.Rows.Count > 0)
+            else if (dt.Rows.Count > 0)
             {
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
@@ -955,27 +965,6 @@ namespace Aries.Core
             }
         }
 
-        [ActionKey("View")]
-        /// <summary>
-        /// 获取框架文件对应的SQL语句 By CYQ
-        /// </summary>
-        public void GetSQL()
-        {
-            string sql = SqlCode.GetSourceCode(ObjName);
-            bool result = !string.IsNullOrEmpty(sql);
-            jsonResult = JsonHelper.OutResult(result, sql);
-        }
-        [ActionKey("SaveSQL")]
-        /// <summary>
-        /// 保存框架文件对应的SQL语句 By CYQ
-        /// </summary>
-        public void SaveSQL()
-        {
-            string msg;
-            bool result = SqlCode.SaveSourceCode(ObjName, Query<string>("sys_code"), out msg);
-            jsonResult = JsonHelper.OutResult(result, result ? LangConst.SaveSuccess : LangConst.SaveError + msg);
-        }
-
         [ActionKey("View,Get")]
         /// <summary>
         /// 是否存在某数据。
@@ -1079,12 +1068,12 @@ namespace Aries.Core
 
         public bool IsHttpGet
         {
-            get { return Context.Request.RequestType == "GET"; }
+            get { return Context.Request.HttpMethod == "GET"; }
         }
 
         public bool IsHttpPost
         {
-            get { return Context.Request.RequestType == "POST"; }
+            get { return Context.Request.HttpMethod == "POST"; }
         }
     }
     /// <summary>

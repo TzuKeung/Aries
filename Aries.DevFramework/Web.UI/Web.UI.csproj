@@ -33,7 +33,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -67,12 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ajax.html" />
-    <Content Include="App_Data\SQLCode\Aries\Sql_Combobox.sql" />
-    <Content Include="App_Data\SQLCode\Aries\Sql.sql" />
-    <Content Include="App_Data\SQLCode\Aries\Sql_Yours.sql" />
-    <Content Include="App_Data\SQLCode\Aries\V_Test.sql" />
-    <Content Include="App_Data\SQLCode\Demo2\V_TestAAA2.sql" />
-    <Content Include="App_Data\SQLCode\命名规范.txt" />
+    <Content Include="App_Data\SqlCode\Aries\Sql_Combobox.sql" />
+    <Content Include="App_Data\SqlCode\Aries\Sql.sql" />
+    <Content Include="App_Data\SqlCode\Aries\Sql_Yours.sql" />
+    <Content Include="App_Data\SqlCode\Aries\V_Test.sql" />
+    <Content Include="App_Data\SqlCode\Demo2\V_TestAAA2.sql" />
+    <Content Include="App_Data\SqlCode\命名规范.txt" />
     <Content Include="App_Data\TxtDB\Config_Excel.ts" />
     <Content Include="App_Data\TxtDB\Config_Excel.txt" />
     <Content Include="App_Data\TxtDB\Config_ExcelInfo.ts" />
@@ -111,6 +111,7 @@
     <Content Include="Demo\inputDialog.html" />
     <Content Include="index.html" />
     <Content Include="login.html" />
+    <Content Include="logout.html" />
     <Content Include="Style\CSS\login.css" />
     <Content Include="Style\CSS\main.css" />
     <Content Include="Style\CSS\style.css" />
@@ -506,6 +507,7 @@
     <Content Include="Web\SysAdmin\MenuEdit.html" />
     <Content Include="Web\SysAdmin\RoleAction.html" />
     <Content Include="Web\SysAdmin\RoleList.html" />
+    <Content Include="Web\SysAdmin\SqlCodeEdit.html" />
     <Content Include="Web\SysAdmin\UserEdit.html" />
     <Content Include="Web\SysAdmin\UserList.html" />
     <Content Include="Web\SysAdmin\DialogView.html" />
@@ -533,7 +535,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Data\SQLCode\Aries\SysAdmin\V_SYS_UserList.sql" />
+    <Content Include="App_Data\SqlCode\Aries\SysAdmin\V_SYS_UserList.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\PublishProfiles\Aries_Publish.pubxml" />
@@ -553,7 +555,7 @@
         <WebProjectProperties>
           <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>17741</DevelopmentServerPort>
+          <DevelopmentServerPort>5230</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost:8011/AR</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>

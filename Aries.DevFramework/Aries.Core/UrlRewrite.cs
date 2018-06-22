@@ -6,10 +6,12 @@ using CYQ.Data.Cache;
 using CYQ.Data.Tool;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Web;
+using System.Web.Configuration;
 
 namespace Aries.Core
 {
@@ -26,7 +28,7 @@ namespace Aries.Core
         bool isAjax = false;
         public void Init(HttpApplication context)
         {
-            if (!isFirstLoad)
+            if (isFirstLoad)
             {
                 isFirstLoad = false;
                 CrossDb.PreLoadAllDBSchemeToCache();
@@ -50,6 +52,7 @@ namespace Aries.Core
             }
         }
         HttpContext context;
+        static int integralFlag = -1;//集成模式
         void context_BeginRequest(object sender, EventArgs e)
         {
             HttpApplication app = (HttpApplication)sender;
@@ -59,7 +62,7 @@ namespace Aries.Core
                 string defaultUrl = WebHelper.GetDefaultUrl();
                 if (!string.IsNullOrEmpty(defaultUrl))
                 {
-                    context.RewritePath(defaultUrl, false);
+                    context.RewritePath(defaultUrl);
                 }
             }
             else
@@ -67,17 +70,37 @@ namespace Aries.Core
                 //VS2013（以上）IISExpress 默认会检测文件存在，导致后续事件无法触发，因此需要做点小事情做兼容）
                 //正常IIS部署，是不需要以前兼容性代码的，（该代码将路径重写到一个已存在的文件，同时在目录下新建了一个ajax.html文件）
                 //简单的地说：以上这段代码，和根目录下的ajax.html文件，是为了兼容VS IISExpress的bug存在的（微软造的孽）。
-                if (WebHelper.IsAriesSuffix())
+#if DEBUG
+                if (integralFlag == -1)
                 {
-                    string localPath = context.Request.Url.LocalPath;
-                    string uriPath = Path.GetFileNameWithoutExtension(localPath).ToLower();
+                    integralFlag = 1;
+                    object ab = ConfigurationManager.GetSection("system.web/httpModules");
+                    if (ab != null)
+                    {
+                        foreach (HttpModuleAction item in ((HttpModulesSection)ab).Modules)
+                        {
+                            if (item.Name == "Aries.Core") { integralFlag = 0; break; }
+                        }
+                    }
+                }
+                //VS2012 或以下，可以注释掉以下这段代码。
+                //string iisName=context.Request.ServerVariables["SERVER_SOFTWARE"];
+                //if (!string.IsNullOrEmpty(iisName) && iisName.StartsWith("Microsoft-IIS/1"))
+                //{
+                //VS2015和VS 2017 Microsoft-IIS/10.0
+                if (integralFlag == 1 && WebHelper.IsAriesSuffix())
+                {
+                    string uriPath = Path.GetFileNameWithoutExtension(context.Request.Url.LocalPath).ToLower();
                     isAjax = uriPath == "ajax";
                     if (isAjax)
                     {
+                        string localPath = context.Request.Url.PathAndQuery;
                         int i = localPath.LastIndexOf('/');
-                        context.RewritePath(localPath.Substring(i), false);//只有重定向到一个存在的文件，兼容微软造的孽
+                        context.RewritePath(localPath.Substring(i));//只有重定向到一个存在的文件，兼容微软造的孽
                     }
                 }
+                // }
+#endif
             }
         }
 
@@ -152,9 +175,9 @@ namespace Aries.Core
 
         private void SetNoCacheAndSafeKey()
         {
-            context.Response.Expires = 0;
-            context.Response.Buffer = true;
-            context.Response.ExpiresAbsolute = DateTime.Now.AddYears(-1);
+            //context.Response.Expires = 0;
+            //context.Response.Buffer = true;
+            //context.Response.ExpiresAbsolute = DateTime.Now.AddYears(-1);
             context.Response.CacheControl = "no-cache";
             SetSafeKey();
         }
@@ -206,12 +229,14 @@ namespace Aries.Core
             if (context.Request.UrlReferrer == null)
             {
                 WriteError("Illegal request!");
+                return;
             }
             else if (!IsExistsSafeKey() && WebHelper.IsCheckToken())// 仅检测需要登陆的页面
             {
                 string path = context.Request.UrlReferrer.PathAndQuery;
                 if (path == "/") { path = "/index.html"; }
                 WriteError(path);//"Page timeout,please reflesh page!"
+                return;
             }
             //AjaxController是由页面的后两个路径决定了。
             string[] items = context.Request.UrlReferrer.LocalPath.TrimStart('/').Split('/');
@@ -227,6 +252,7 @@ namespace Aries.Core
                 if (t == null)
                 {
                     WriteError("You need to create a controller for coding !");
+                    return;
                 }
             }
             #endregion
